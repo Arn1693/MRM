@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kaizen Engineers — MRM Digital Recording Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#DA1E28;--red-light:#FFEBEB;--red-mid:#FFB3B3;
+  --gray-dark:#1A1A2E;--gray-800:#2D2D3F;--gray-700:#4A4A5C;
+  --gray-600:#6B6B80;--gray-400:#9B9BAA;--gray-200:#E8E8F0;
+  --gray-100:#F4F4F8;--gray-50:#FAFAFC;--white:#FFFFFF;
+  --blue:#1B4FD8;--blue-light:#EBF0FF;
+  --green:#0E7E49;--green-light:#E6F4EE;
+  --amber:#B45309;--amber-light:#FEF3C7;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.05);
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.10),0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-md:0 10px 15px -3px rgba(0,0,0,0.10),0 4px 6px -2px rgba(0,0,0,0.05);
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+}
+body{font-family:'Inter',sans-serif;background:var(--gray-50);color:var(--gray-800);min-height:100vh;font-size:14px;line-height:1.6}
+input,select,textarea,button{font-family:'Inter',sans-serif;font-size:13px}
+
+/* TOPBAR */
+.topbar{background:var(--gray-dark);color:white;padding:0 28px;display:flex;align-items:center;gap:16px;height:52px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-md)}
+.topbar-logo{display:flex;align-items:center;gap:10px}
+.topbar-logo img{height:30px;filter:brightness(0) invert(1)}
+.topbar-divider{width:1px;height:28px;background:rgba(255,255,255,0.2)}
+.topbar-title{font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.9)}
+.topbar-sub{font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:1px}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.topbar-save-ind{font-size:11px;color:rgba(255,255,255,0.5);padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1)}
+.btn{padding:7px 16px;border-radius:var(--radius);border:none;cursor:pointer;font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn-ghost{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.15)}
+.btn-ghost:hover{background:rgba(255,255,255,0.18)}
+.btn-red{background:var(--red);color:white}
+.btn-red:hover{background:#C01020}
+
+/* HERO HEADER */
+.hero{background:linear-gradient(135deg,var(--gray-dark) 0%,var(--gray-800) 100%);color:white;padding:28px 32px 0;border-bottom:3px solid var(--red)}
+.hero-inner{max-width:1200px;margin:0 auto}
+.hero-top{display:flex;align-items:center;gap:20px;margin-bottom:20px}
+.hero-logo-wrap{background:white;border-radius:var(--radius-lg);padding:10px 14px;display:flex;align-items:center;justify-content:center}
+.hero-logo-wrap img{height:44px;width:auto}
+.hero-info h1{font-family:'Poppins',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.3px;margin-bottom:2px}
+.hero-info p{font-size:11px;color:rgba(255,255,255,0.55);letter-spacing:1.5px;text-transform:uppercase}
+.hero-badges{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.hero-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:600;letter-spacing:0.5px}
+.hero-badge-red{background:var(--red);color:white}
+.hero-badge-gray{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.75)}
+.stats-bar{display:flex;gap:0;border-top:1px solid rgba(255,255,255,0.1);margin-top:4px}
+.stat-pill{padding:12px 20px;font-size:12px;color:rgba(255,255,255,0.55);display:flex;align-items:center;gap:8px;border-right:1px solid rgba(255,255,255,0.08)}
+.stat-pill strong{color:white;font-size:15px;font-weight:600;display:block;line-height:1.1}
+.stat-pill span{font-size:10px}
+
+/* TABS */
+.tab-row{background:white;border-bottom:2px solid var(--gray-200);padding:0 32px;display:flex;gap:2px;max-width:100%;overflow-x:auto;position:sticky;top:52px;z-index:90;box-shadow:var(--shadow-sm)}
+.tab-btn{padding:14px 20px;border:none;background:transparent;cursor:pointer;font-size:12px;font-weight:500;color:var(--gray-600);display:flex;align-items:center;gap:7px;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .15s}
+.tab-btn:hover{color:var(--gray-800)}
+.tab-btn.active{color:var(--red);border-bottom-color:var(--red);font-weight:600}
+.tab-icon{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px}
+.tab-btn.active .tab-icon{background:var(--red-light);color:var(--red)}
+.tab-badge{font-size:10px;padding:2px 6px;border-radius:10px;background:var(--gray-100);color:var(--gray-600);font-weight:600}
+.tab-btn.active .tab-badge{background:var(--red-light);color:var(--red)}
+
+/* CONTENT */
+.content{max-width:1200px;margin:0 auto;padding:24px 32px 48px}
+.panel{display:none}.panel.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:white;border:1px solid var(--gray-200);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--gray-200);background:var(--gray-50);display:flex;align-items:center;gap:10px}
+.card-header-icon{width:28px;height:28px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.card-header-icon.red{background:var(--red-light);color:var(--red)}
+.card-header-icon.blue{background:var(--blue-light);color:var(--blue)}
+.card-header-icon.green{background:var(--green-light);color:var(--green)}
+.card-header h3{font-size:13px;font-weight:600;color:var(--gray-800)}
+.card-header span.sub{font-size:11px;color:var(--gray-400);margin-left:4px}
+.card-body{padding:18px}
+
+/* FORMS */
+.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:600;color:var(--gray-600);letter-spacing:0.4px;text-transform:uppercase}
+.field input,.field select,.field textarea{padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:13px;color:var(--gray-800);background:white;transition:border-color .15s,box-shadow .15s;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(218,30,40,0.08)}
+.field input::placeholder,.field textarea::placeholder{color:var(--gray-400)}
+.field textarea{resize:vertical;min-height:80px}
+.seg-ctrl{display:inline-flex;border:1.5px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;background:var(--gray-50)}
+.seg-lbl{padding:7px 16px;cursor:pointer;font-size:12px;font-weight:500;color:var(--gray-600);transition:all .15s;border-right:1px solid var(--gray-200);user-select:none}
+.seg-lbl:last-child{border-right:none}
+.seg-lbl input{display:none}
+.seg-lbl.sel{background:var(--red);color:white}
+.seg-lbl.sel-green{background:var(--green);color:white}
+.seg-lbl.sel-amber{background:var(--amber);color:white}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* STATUS MSG */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:var(--radius-lg);font-size:13px;font-weight:500;box-shadow:var(--shadow-md);z-index:999;display:flex;align-items:center;gap:8px;transform:translateY(20px);opacity:0;transition:all .25s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.s{background:#0E7E49;color:white}.toast.e{background:var(--red);color:white}.toast.i{background:var(--blue);color:white}
+
+/* PARTICIPANTS */
+.part-table{width:100%}
+.part-thead{display:grid;grid-template-columns:40px 40px 1fr 1fr 80px;gap:10px;padding:10px 14px;background:var(--gray-50);border-bottom:1px solid var(--gray-200);font-size:10px;font-weight:700;color:var(--gray-500);letter-spacing:0.8px;text-transform:uppercase}
+.part-row{display:grid;grid-template-columns:40px 40px 1fr 1fr 80px;gap:10px;padding:10px 14px;border-bottom:1px solid var(--gray-100);align-items:center;transition:background .1s}
+.part-row:hover{background:var(--gray-50)}
+.part-row:last-child{border-bottom:none}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.ibt{width:30px;height:30px;border-radius:6px;border:1px solid var(--gray-200);background:white;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:var(--gray-500);transition:all .15s}
+.ibt:hover{background:var(--gray-100);color:var(--gray-800)}
+.ibt.del:hover{background:var(--red-light);color:var(--red);border-color:var(--red-mid)}
+
+/* AGENDA */
+.agenda-item{border:1.5px solid var(--gray-200);border-radius:var(--radius-lg);margin-bottom:8px;overflow:hidden;transition:border-color .2s}
+.agenda-item.has-data{border-color:#C7D7FD}
+.agenda-item.status-completed{border-left:4px solid var(--green)}
+.agenda-item.status-inprogress{border-left:4px solid var(--amber)}
+.agenda-item.status-open{border-left:4px solid var(--gray-300,#ccc)}
+.agenda-item.status-na{border-left:4px solid var(--gray-200)}
+.agenda-head{display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;background:white;border:none;width:100%;text-align:left;font-family:'Inter',sans-serif}
+.agenda-head:hover{background:var(--gray-50)}
+.agenda-num{min-width:30px;height:30px;border-radius:8px;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gray-600);flex-shrink:0}
+.agenda-item.status-completed .agenda-num{background:var(--green-light);color:var(--green)}
+.agenda-item.status-inprogress .agenda-num{background:var(--amber-light);color:var(--amber)}
+.agenda-title-wrap{flex:1;min-width:0;text-align:left}
+.agenda-title{font-size:13px;font-weight:500;color:var(--gray-800);line-height:1.4}
+.agenda-ref{font-size:10px;color:var(--gray-400);margin-top:2px;font-weight:500}
+.agenda-body{padding:16px;background:var(--gray-50);border-top:1px solid var(--gray-200);display:none}
+.agenda-body.open{display:block;animation:fadeIn .15s ease}
+.ag-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.ag-grid .full{grid-column:1/-1}
+.status-btns{display:flex;gap:6px;flex-wrap:wrap}
+.sbtn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--gray-200);background:white;cursor:pointer;font-size:11px;font-weight:600;color:var(--gray-500);transition:all .15s;font-family:'Inter',sans-serif}
+.sbtn:hover{border-color:var(--gray-400)}
+.sbtn.open.sel{border-color:var(--red);background:var(--red-light);color:var(--red)}
+.sbtn.inprogress.sel{border-color:var(--amber);background:var(--amber-light);color:var(--amber)}
+.sbtn.completed.sel{border-color:var(--green);background:var(--green-light);color:var(--green)}
+.sbtn.na.sel{border-color:var(--gray-600);background:var(--gray-100);color:var(--gray-600)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;gap:4px}
+.bdg-open{background:var(--red-light);color:var(--red)}
+.bdg-ip{background:var(--amber-light);color:var(--amber)}
+.bdg-done{background:var(--green-light);color:var(--green)}
+.bdg-na{background:var(--gray-100);color:var(--gray-600)}
+
+/* PROGRESS STATS */
+.prog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.prog-card{background:white;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:16px;text-align:center;box-shadow:var(--shadow-sm)}
+.prog-num{font-family:'Poppins',sans-serif;font-size:28px;font-weight:700;line-height:1}
+.prog-lbl{font-size:11px;font-weight:600;color:var(--gray-500);margin-top:4px;letter-spacing:0.4px;text-transform:uppercase}
+.prog-card.done .prog-num{color:var(--green)}
+.prog-card.ip .prog-num{color:var(--amber)}
+.prog-card.open .prog-num{color:var(--red)}
+.prog-card.na .prog-num{color:var(--gray-400)}
+.pbar-wrap{background:white;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:14px}
+.pbar-row{display:flex;justify-content:space-between;font-size:12px;color:var(--gray-600);margin-bottom:8px;font-weight:500}
+.pbar-track{height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden}
+.pbar-fill{height:100%;background:linear-gradient(90deg,var(--green),#16a34a);border-radius:4px;transition:width .4s}
+
+/* DIGITAL MRM DOC */
+.doc-wrap{background:white;border:1px solid var(--gray-200);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow)}
+.doc-header-band{background:linear-gradient(135deg,var(--gray-dark),var(--gray-800));color:white;padding:20px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:4px solid var(--red)}
+.doc-header-left{display:flex;align-items:center;gap:16px}
+.doc-header-logo{background:white;border-radius:var(--radius);padding:8px 12px}
+.doc-header-logo img{height:38px;width:auto}
+.doc-org-name{font-family:'Poppins',sans-serif;font-size:18px;font-weight:700}
+.doc-org-std{font-size:10px;color:rgba(255,255,255,0.55);letter-spacing:1px;margin-top:2px}
+.doc-meta-box{text-align:right;font-size:11px;color:rgba(255,255,255,0.6)}
+.doc-meta-box strong{color:white;display:block;font-size:13px;font-family:'Poppins',sans-serif;margin-top:2px}
+.doc-title-band{background:var(--gray-50);padding:14px 28px;border-bottom:1px solid var(--gray-200);text-align:center}
+.doc-title-band h2{font-family:'Poppins',sans-serif;font-size:16px;font-weight:700;color:var(--gray-800);letter-spacing:0.5px}
+.doc-title-band p{font-size:11px;color:var(--gray-500);margin-top:3px}
+.doc-content{padding:20px 28px}
+.doc-section-title{font-size:11px;font-weight:700;color:white;background:var(--gray-700);padding:6px 12px;letter-spacing:1px;text-transform:uppercase;margin:16px 0 0;border-radius:var(--radius) var(--radius) 0 0}
+.doc-table{width:100%;border-collapse:collapse;font-size:12px}
+.doc-table th{background:var(--gray-800);color:white;padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:0.7px;text-align:left;text-transform:uppercase}
+.doc-table td{border:1px solid var(--gray-200);padding:6px 10px;vertical-align:top;font-size:12px}
+.doc-table tr:nth-child(even) td{background:var(--gray-50)}
+.doc-table .lbl{background:var(--gray-100);font-weight:600;color:var(--gray-600);font-size:11px;white-space:nowrap;width:1px}
+.doc-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--gray-200);border-top:none}
+.doc-info-row{display:contents}
+.doc-info-lbl{background:var(--gray-100);padding:7px 12px;font-size:11px;font-weight:600;color:var(--gray-600);border-bottom:1px solid var(--gray-200);border-right:1px solid var(--gray-200)}
+.doc-info-val{padding:7px 12px;font-size:12px;border-bottom:1px solid var(--gray-200);border-right:1px solid var(--gray-200)}
+.doc-info-val:last-child{border-right:none}
+.sig-row{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid var(--gray-200);border-top:none}
+.sig-cell{padding:16px;text-align:center;border-right:1px solid var(--gray-200)}
+.sig-cell:last-child{border-right:none}
+.sig-line{border-top:1.5px solid var(--gray-800);margin:28px 16px 6px}
+.doc-footer{background:var(--gray-50);border-top:1px solid var(--gray-200);padding:10px 28px;display:flex;justify-content:space-between;font-size:10px;color:var(--gray-400)}
+
+/* RECORDS */
+.rec-card{background:white;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);transition:box-shadow .15s}
+.rec-card:hover{box-shadow:var(--shadow)}
+.rec-icon{width:42px;height:42px;border-radius:var(--radius-lg);background:var(--red-light);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:'Poppins',sans-serif;flex-shrink:0}
+.export-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.export-card{background:white;border:1.5px solid var(--gray-200);border-radius:var(--radius-lg);padding:18px;cursor:pointer;text-align:left;transition:all .2s;box-shadow:var(--shadow-sm)}
+.export-card:hover{box-shadow:var(--shadow-md);border-color:var(--red);transform:translateY(-2px)}
+.export-icon{font-size:28px;margin-bottom:10px}
+.export-title{font-size:14px;font-weight:600;color:var(--gray-800);margin-bottom:4px}
+.export-sub{font-size:11px;color:var(--gray-500);line-height:1.5}
+.info-banner{background:var(--blue-light);border:1px solid #C7D7FD;border-radius:var(--radius-lg);padding:12px 16px;font-size:12px;color:#1B4FD8;line-height:1.7}
+
+/* SECTION actions row */
+.section-actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
+.act-btn{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--gray-200);background:white;cursor:pointer;font-size:12px;font-weight:500;color:var(--gray-600);display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.act-btn:hover{background:var(--gray-100);color:var(--gray-800)}
+.act-btn.primary{background:var(--red);color:white;border-color:var(--red)}
+.act-btn.primary:hover{background:#C01020}
+
+
+.pdd-wrap{position:relative}
+.pdd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid #E8E8F0;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.14);z-index:600;max-height:260px;overflow-y:auto;display:none}
+.pdd.open{display:block;animation:fadeIn .15s ease}
+.pdd-hdr{padding:8px 12px;font-size:10px;font-weight:700;color:#9B9BAA;letter-spacing:.8px;text-transform:uppercase;background:#FAFAFC;border-bottom:1px solid #F4F4F8;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between}
+.pdd-item{padding:9px 13px;cursor:pointer;border-bottom:1px solid #F4F4F8;display:flex;align-items:center;gap:10px;transition:background .1s}
+.pdd-item:hover{background:#F4F4F8}
+.pdd-item:last-child{border-bottom:none;border-radius:0 0 10px 10px}
+.pdd-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.pdd-name{font-size:13px;font-weight:600;color:#2D2D3F}
+.pdd-desig{font-size:11px;color:#9B9BAA;margin-top:1px}
+.pdd-empty{padding:14px 13px;font-size:12px;color:#9B9BAA;text-align:center}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--gray-400)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty p{font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <img id="topbar-logo" src="" alt="Kaizen Engineers"/>
+    <div class="topbar-divider"></div>
+    <div>
+      <div class="topbar-title">MRM Recording Tool</div>
+      <div class="topbar-sub">IATF 16949:2016 — CLAUSE 9.3</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <span class="topbar-save-ind" id="sind">⬤ Ready</span>
+    <button class="btn btn-ghost" onclick="newMRM()">＋ New MRM</button>
+    <button class="btn btn-red" onclick="quickSave()">💾 Save Record</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="hero-logo-wrap">
+        <img id="hero-logo" src="" alt="Kaizen Engineers" style="height:44px"/>
+      </div>
+      <div class="hero-info">
+        <h1>Management Review Meeting</h1>
+        <p>IATF 16949:2016 · CLAUSE 9.3 · DIGITAL RECORDING &amp; DOCUMENTATION TOOL</p>
+      </div>
+      <div class="hero-badges">
+        <span class="hero-badge hero-badge-red">IATF 16949:2016</span>
+        <span class="hero-badge hero-badge-gray">Kaizen Engineers</span>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-pill"><strong id="stat-co">—</strong><span>Organization</span></div>
+      <div class="stat-pill"><strong id="stat-no">—</strong><span>MRM Number</span></div>
+      <div class="stat-pill"><strong id="stat-dt">—</strong><span>Date</span></div>
+      <div class="stat-pill"><strong id="stat-pt">0</strong><span>Participants</span></div>
+      <div class="stat-pill"><strong id="stat-ag">0/17</strong><span>Agenda Items</span></div>
+      <div class="stat-pill"><strong id="stat-con">Satisfactory</strong><span>Conclusion</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- TABS -->
+<div class="tab-row" role="tablist">
+  <button class="tab-btn active" onclick="go('meeting')"><div class="tab-icon">🏢</div>Meeting Info</button>
+  <button class="tab-btn" onclick="go('participants')"><div class="tab-icon">👥</div>Participants <span class="tab-badge" id="pc">0</span></button>
+  <button class="tab-btn" onclick="go('agenda')"><div class="tab-icon">📋</div>Agenda Items <span class="tab-badge" id="ac">0/17</span></button>
+  <button class="tab-btn" onclick="go('mrm')"><div class="tab-icon">📄</div>Digital MRM</button>
+  <button class="tab-btn" onclick="go('records')"><div class="tab-icon">🗄️</div>Records &amp; Export <span class="tab-badge" id="rc">0</span></button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- MEETING INFO -->
+<div class="panel active" id="panel-meeting">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon red">📅</div>
+      <h3>Meeting details</h3>
+    </div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field"><label>Organization / company name</label><input id="m-co" type="text" list="co-dl" placeholder="e.g. Kaizen Engineers" oninput="td()" autocomplete="off"/><datalist id="co-dl"></datalist></div>
+        <div class="field"><label>MRM number</label><input id="m-no" type="text" placeholder="e.g. MRM-2026-01" oninput="td()"/></div>
+        <div class="field"><label>Date</label><input id="m-dt" type="date" onchange="td()"/></div>
+        <div class="field"><label>Time</label><input id="m-tm" type="time" onchange="td()"/></div>
+        <div class="field"><label>Venue / location</label><input id="m-vn" type="text" placeholder="e.g. Conference room, plant" oninput="td()"/></div>
+        <div class="field"><label>Chairperson / conducted by</label><input id="m-ch" type="text" placeholder="Name, designation" oninput="td()"/></div>
+        <div class="field"><label>Document number</label><input id="m-dn" type="text" value="QMS/F/10/00" oninput="td()"/></div>
+        <div class="field"><label>Next MRM planned date</label><input id="m-nx" type="date" onchange="td()"/></div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Meeting type</label>
+          <div class="seg-ctrl" style="width:fit-content">
+            <label class="seg-lbl sel" id="mt-Regular"><input type="radio" name="mtype" value="Regular" checked onchange="updSeg('mt','mtype',['Regular','Additional','Special'])"/>Regular</label>
+            <label class="seg-lbl" id="mt-Additional"><input type="radio" name="mtype" value="Additional" onchange="updSeg('mt','mtype',['Regular','Additional','Special'])"/>Additional</label>
+            <label class="seg-lbl" id="mt-Special"><input type="radio" name="mtype" value="Special" onchange="updSeg('mt','mtype',['Regular','Additional','Special'])"/>Special</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon green">✅</div>
+      <h3>Management review output</h3><span class="sub">Clause 9.3.3</span>
+    </div>
+    <div class="card-body">
+      <div class="field" style="margin-bottom:14px">
+        <label>Overall conclusion</label>
+        <div class="seg-ctrl" style="width:fit-content">
+          <label class="seg-lbl sel" id="cn-Satisfactory"><input type="radio" name="conc" value="Satisfactory" checked onchange="updSeg('cn','conc',['Satisfactory','Needs improvement','Unsatisfactory'])"/>✓ Satisfactory</label>
+          <label class="seg-lbl" id="cn-Needs improvement"><input type="radio" name="conc" value="Needs improvement" onchange="updSeg('cn','conc',['Satisfactory','Needs improvement','Unsatisfactory'])"/>Needs improvement</label>
+          <label class="seg-lbl" id="cn-Unsatisfactory"><input type="radio" name="conc" value="Unsatisfactory" onchange="updSeg('cn','conc',['Satisfactory','Needs improvement','Unsatisfactory'])"/>✗ Unsatisfactory</label>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Decisions and actions arising from the review</label>
+        <textarea id="m-ro" rows="3" placeholder="Record all decisions and actions: opportunities for improvement, QMS changes, resource needs…" oninput="td()"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>CC to</label><input id="m-cc" type="text" value="All departments" oninput="td()"/></div>
+        <div class="field"><label>Additional remarks</label><input id="m-ar" type="text" placeholder="Any additional notes" oninput="td()"/></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-banner">
+    <strong>📘 IATF 16949:2016 – Clause 9.3:</strong> Top management shall review the QMS at planned intervals to ensure its continuing suitability, adequacy, effectiveness and alignment with the strategic direction. Results shall include decisions and actions related to improvement opportunities, QMS changes, and resource needs — retained as documented information.
+  </div>
+</div>
+
+<!-- PARTICIPANTS -->
+<div class="panel" id="panel-participants">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon blue">👥</div>
+      <h3>Attendees / participants</h3>
+      <span class="sub" id="psub">0 recorded</span>
+      <button class="act-btn primary" style="margin-left:auto" onclick="addPart()">＋ Add participant</button>
+    </div>
+    <div class="part-table">
+      <div class="part-thead">
+        <div>SR.</div><div></div><div>NAME</div><div>DESIGNATION</div><div>ACTIONS</div>
+      </div>
+      <div id="plist"></div><datalist id="desig-dl"></datalist>
+    </div>
+  </div>
+</div>
+
+<!-- AGENDA -->
+<div class="panel" id="panel-agenda">
+  <div class="prog-grid">
+    <div class="prog-card done"><div class="prog-num" id="cnt-c">0</div><div class="prog-lbl">Completed</div></div>
+    <div class="prog-card ip"><div class="prog-num" id="cnt-i">0</div><div class="prog-lbl">In Progress</div></div>
+    <div class="prog-card open"><div class="prog-num" id="cnt-o">17</div><div class="prog-lbl">Open</div></div>
+    <div class="prog-card na"><div class="prog-num" id="cnt-n">0</div><div class="prog-lbl">N / A</div></div>
+  </div>
+  <div class="pbar-wrap">
+    <div class="pbar-row"><span id="plbl">0 of 17 agenda items completed</span><span id="ppct" style="font-weight:600;color:var(--green)">0%</span></div>
+    <div class="pbar-track"><div class="pbar-fill" id="pfill" style="width:0%"></div></div>
+  </div>
+  <div class="section-actions">
+    <button class="act-btn" onclick="allExp(true)">⊞ Expand all</button>
+    <button class="act-btn" onclick="allExp(false)">⊟ Collapse all</button>
+  </div>
+  <div id="alist"></div>
+</div>
+
+<!-- DIGITAL MRM -->
+<div class="panel" id="panel-mrm">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div>
+      <h2 style="font-size:16px;font-weight:600;margin-bottom:2px">Digital MRM document</h2>
+      <p style="font-size:12px;color:var(--gray-500)">Formatted presentation — audit-ready documented information per IATF 16949:2016</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="act-btn" onclick="renderDoc()">🔄 Refresh</button>
+      <button class="act-btn primary" onclick="doPDF()">🖨️ Print / PDF</button>
+    </div>
+  </div>
+  <div id="doc-content"></div>
+</div>
+
+<!-- RECORDS & EXPORT -->
+<div class="panel" id="panel-records">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-header">
+        <div class="card-header-icon red">💾</div>
+        <h3>Save record</h3>
+      </div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--gray-500);margin-bottom:14px;line-height:1.7">Save the current MRM session as a named record. Records persist and can be reloaded at any time.</p>
+        <button class="act-btn primary" style="width:100%;justify-content:center;padding:10px" onclick="quickSave()">💾 Save this MRM as a record</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-header">
+        <div class="card-header-icon blue">📤</div>
+        <h3>Export current MRM</h3>
+      </div>
+      <div class="card-body" style="padding:12px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="export-card" style="display:flex;align-items:center;gap:12px;padding:10px 14px" onclick="doJSON()">
+            <span style="font-size:22px">{ }</span>
+            <div><div class="export-title" style="font-size:13px">Export as JSON</div><div class="export-sub">Structured data file</div></div>
+          </button>
+          <button class="export-card" style="display:flex;align-items:center;gap:12px;padding:10px 14px" onclick="doExcel()">
+            <span style="font-size:22px">📊</span>
+            <div><div class="export-title" style="font-size:13px">Export as Excel (.xlsx)</div><div class="export-sub">Multi-sheet workbook</div></div>
+          </button>
+          <button class="export-card" style="display:flex;align-items:center;gap:12px;padding:10px 14px" onclick="doPDF()">
+            <span style="font-size:22px">🖨️</span>
+            <div><div class="export-title" style="font-size:13px">Print / Export PDF</div><div class="export-sub">A4-formatted document</div></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <h3 style="font-size:15px;font-weight:600">Saved records</h3>
+    <span style="font-size:12px;color:var(--gray-500)" id="rcount">0 records</span>
+  </div>
+  <div id="rec-list"></div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+const ITEMS=[
+  {id:1,title:"Follow up actions from previous management review",ref:"9.3.2 (a)"},
+  {id:2,title:"Results of audit — 1st party / 2nd party / process & product / 3rd party",ref:"9.3.2 (b)"},
+  {id:3,title:"Customer feedback — satisfaction, returns and complaints",ref:"9.3.2 (c)"},
+  {id:4,title:"Performance of external providers",ref:"9.3.2 (d)"},
+  {id:5,title:"Feedback from relevant interested parties",ref:"9.3.2 (e)"},
+  {id:6,title:"Status of corrective actions",ref:"9.3.2 (f)"},
+  {id:7,title:"Process performance, product & service conformity and machine breakdown analysis",ref:"9.3.2 (g)"},
+  {id:8,title:"Quality policy and quality objectives — suitability and adequacy review",ref:"9.3.2 (h)"},
+  {id:9,title:"Business plan and key performance indicator trends",ref:"9.3.2 (i)"},
+  {id:10,title:"Cost of poor quality (COPQ)",ref:"9.3.2 (j)"},
+  {id:11,title:"Status of new development, APQP and warranty performance",ref:"9.3.2 (k)"},
+  {id:12,title:"Plant facility, equipment planning, adequacy of resources and risk & opportunity effectiveness",ref:"9.3.2 (l)"},
+  {id:13,title:"Changes that could affect the quality management system",ref:"9.3.2 (m)"},
+  {id:14,title:"Recommendations for improvement — MRM output, QMS processes and improvement opportunities",ref:"9.3.3"},
+  {id:15,title:"Improvement related to product — customer-wise recommendations, notifications and development",ref:"9.3.2 (n)"},
+  {id:16,title:"Actual and potential field failures & their impact on safety or the environment",ref:"9.3.2 (o)"},
+  {id:17,title:"Resource needs",ref:"9.3.2 (p)"}
+];
+const AV_COLORS=[['#DBEAFE','#1D4ED8'],['#D1FAE5','#065F46'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D'],['#EDE9FE','#5B21B6']];
+let parts=[],nid=1,dTimer;
+let agenda=ITEMS.map(x=>({...x,pointDiscussed:"",actionToBeTaken:"",responsibility:"",targetDate:"",status:"Open",expanded:false}));
+const LOGO_SRC="data:image/jpeg;base64,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";
+function setLogos(){document.getElementById('topbar-logo').src=LOGO_SRC;document.getElementById('hero-logo').src=LOGO_SRC;}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtDate(d){if(!d)return'—';try{return new Date(d+'T00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}catch(e){return d;}}
+function fmtDT(s){if(!s)return'';try{const d=new Date(s);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}catch(e){return s;}}
+function bCls(s){return s==='Completed'?'bdg-done':s==='In Progress'?'bdg-ip':s==='N/A'?'bdg-na':'bdg-open';}
+function sCls(s){return s==='Completed'?'status-completed':s==='In Progress'?'status-inprogress':s==='N/A'?'status-na':'status-open';}
+function initials(n){if(!n)return'?';return n.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+let toastT;
+function showMsg(txt,type,dur=3500){const el=document.getElementById('toast');el.className='toast show '+type;el.textContent=txt;clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),dur);}
+function updSind(txt){document.getElementById('sind').textContent='⬤ '+txt;}
+function updStats(){
+  const inf=getInfo(),ps=getSavedParts(),disc=agenda.filter(x=>x.pointDiscussed.trim()).length;
+  document.getElementById('stat-co').textContent=inf.companyName||'—';
+  document.getElementById('stat-no').textContent=inf.mrmNo||'—';
+  document.getElementById('stat-dt').textContent=inf.date?fmtDate(inf.date):'—';
+  document.getElementById('stat-pt').textContent=ps.length;
+  document.getElementById('stat-ag').textContent=disc+'/17';
+  document.getElementById('stat-con').textContent=inf.conclusion||'Satisfactory';
+}
+function go(tab){
+  const tabs=['meeting','participants','agenda','mrm','records'];
+  tabs.forEach((t,i)=>{
+    document.getElementById('panel-'+t).classList.toggle('active',t===tab);
+    document.querySelectorAll('.tab-btn')[i].classList.toggle('active',t===tab);
+  });
+  if(tab==='mrm')renderDoc();
+  if(tab==='records')renderRecords();
+}
+function updSeg(prefix,name,vals){
+  vals.forEach(v=>{const l=document.getElementById(prefix+'-'+v);if(l)l.classList.toggle('sel',document.querySelector(`input[name="${name}"][value="${v}"]`)?.checked);});
+  td();
+}
+function getInfo(){return{
+  companyName:document.getElementById('m-co').value,
+  mrmNo:document.getElementById('m-no').value,
+  date:document.getElementById('m-dt').value,
+  time:document.getElementById('m-tm').value,
+  venue:document.getElementById('m-vn').value,
+  chairperson:document.getElementById('m-ch').value,
+  documentNo:document.getElementById('m-dn').value,
+  nextMrmDate:document.getElementById('m-nx').value,
+  meetingType:document.querySelector('input[name="mtype"]:checked')?.value||'Regular',
+  conclusion:document.querySelector('input[name="conc"]:checked')?.value||'Satisfactory',
+  reviewOutput:document.getElementById('m-ro').value,
+  ccTo:document.getElementById('m-cc').value,
+  additionalRemarks:document.getElementById('m-ar').value,
+  standardRef:'IATF 16949:2016, Clause 9.3',
+};}
+function setInfo(inf){
+  const map={companyName:'m-co',mrmNo:'m-no',date:'m-dt',time:'m-tm',venue:'m-vn',chairperson:'m-ch',documentNo:'m-dn',nextMrmDate:'m-nx',reviewOutput:'m-ro',ccTo:'m-cc',additionalRemarks:'m-ar'};
+  Object.entries(map).forEach(([k,id])=>{if(inf[k]!==undefined){const el=document.getElementById(id);if(el)el.value=inf[k];}});
+  if(inf.meetingType){const r=document.querySelector(`input[name="mtype"][value="${inf.meetingType}"]`);if(r){r.checked=true;updSeg('mt','mtype',['Regular','Additional','Special']);}}
+  if(inf.conclusion){const r=document.querySelector(`input[name="conc"][value="${inf.conclusion}"]`);if(r){r.checked=true;updSeg('cn','conc',['Satisfactory','Needs improvement','Unsatisfactory']);}}
+}
+function td(){updSind('Unsaved…');clearTimeout(dTimer);dTimer=setTimeout(saveDraft,4000);updStats();}
+async function saveDraft(){try{localStorage.setItem('mrm-draft',JSON.stringify(collectData()));updSind('Auto-saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));}catch(e){}}
+async function loadDraft(){try{const r=localStorage.getItem('mrm-draft');if(r){applyData(JSON.parse(r));updSind('Session restored');}}catch(e){}}
+function collectData(){return{meetingInfo:getInfo(),participants:getSavedParts().map(({id,editing,...r})=>r),agendaItems:agenda.map(({expanded,...r})=>r)};}
+function getSavedParts(){return parts.map(p=>p.editing?{...p,name:document.getElementById('pn-'+p.id)?.value||p.name,designation:document.getElementById('pd-'+p.id)?.value||p.designation}:p);}
+function applyData(data){
+  if(data.meetingInfo){setInfo(data.meetingInfo);saveToCoList(data.meetingInfo.companyName);}
+  if(data.participants){parts=data.participants.map(p=>({...p,id:nid++,editing:false}));parts.forEach(p=>{if(p.name)saveToPLib(p.name,p.designation);});renderParts();}
+  if(data.agendaItems){data.agendaItems.forEach(l=>{const a=agenda.find(x=>x.id===l.id);if(a)Object.assign(a,{pointDiscussed:l.pointDiscussed||'',actionToBeTaken:l.actionToBeTaken||'',responsibility:l.responsibility||'',targetDate:l.targetDate||'',status:l.status||'Open',expanded:false});});renderAgenda();}
+  updStats();
+}
+
+// ═══════════════════════════════════════════
+//  PARTICIPANT & COMPANY LIBRARY
+// ═══════════════════════════════════════════
+const AV_C=[['#DBEAFE','#1D4ED8'],['#D1FAE5','#065F46'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D'],['#EDE9FE','#5B21B6'],['#FFEDD5','#9A3412']];
+
+function getPLib(){try{return JSON.parse(localStorage.getItem('mrm-plib')||'[]');}catch(e){return[];}}
+function saveToPLib(name,desig){
+  if(!name||!name.trim())return;
+  let lib=getPLib();
+  const ex=lib.findIndex(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(ex>=0){if(desig)lib[ex].designation=desig;}else{lib.unshift({name:name.trim(),designation:(desig||'').trim()});}
+  localStorage.setItem('mrm-plib',JSON.stringify(lib.slice(0,150)));
+  loadDesigDL();
+}
+function loadDesigDL(){
+  const dl=document.getElementById('desig-dl');if(!dl)return;
+  const lib=getPLib();const desigs=[...new Set(lib.map(p=>p.designation).filter(Boolean))];
+  dl.innerHTML=desigs.map(d=>`<option value="${esc(d)}">`).join('');
+}
+function showPDD(id,query){
+  const lib=getPLib(),q=(query||'').toLowerCase().trim();
+  const filtered=q?lib.filter(p=>p.name.toLowerCase().includes(q)||p.designation.toLowerCase().includes(q)):lib;
+  const dd=document.getElementById('pdd-'+id);if(!dd)return;
+  if(!filtered.length&&!q){dd.classList.remove('open');return;}
+  if(!filtered.length){dd.innerHTML='<div class="pdd-empty">No match — press Enter to add as new</div>';dd.classList.add('open');return;}
+  dd.innerHTML=`<div class="pdd-hdr"><span>Saved participants</span><span>${filtered.length} found</span></div>`
+    +filtered.slice(0,10).map((p,i)=>{
+      const[bg,col]=AV_C[i%AV_C.length];
+      const ini=p.name.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      const dn=p.name.replace(/'/g,"\\'"),dd2=(p.designation||'').replace(/'/g,"\\'");
+      return`<div class="pdd-item" onmousedown="pickPart(${id},'${dn}','${dd2}')"><div class="pdd-av" style="background:${bg};color:${col}">${ini}</div><div><div class="pdd-name">${esc(p.name)}</div><div class="pdd-desig">${esc(p.designation)||'<em style=color:#ccc>No designation</em>'}</div></div></div>`;
+    }).join('');
+  dd.classList.add('open');
+}
+function pickPart(id,name,desig){
+  const ni=document.getElementById('pn-'+id),di=document.getElementById('pd-'+id);
+  if(ni)ni.value=name;if(di)di.value=desig;
+  hidePDD(id);
+}
+function hidePDD(id){const dd=document.getElementById('pdd-'+id);if(dd)dd.classList.remove('open');}
+
+function getCoList(){try{return JSON.parse(localStorage.getItem('mrm-colist')||'[]');}catch(e){return[];}}
+function saveToCoList(name){
+  if(!name||!name.trim())return;
+  let list=getCoList();
+  if(!list.map(x=>x.toLowerCase()).includes(name.toLowerCase())){list.unshift(name.trim());localStorage.setItem('mrm-colist',JSON.stringify(list.slice(0,50)));}
+  loadCoDL();
+}
+function loadCoDL(){
+  const dl=document.getElementById('co-dl');if(!dl)return;
+  dl.innerHTML=getCoList().map(c=>`<option value="${esc(c)}">`).join('');
+}
+
+function addPart(){parts.push({id:nid++,name:'',designation:'',editing:true});renderParts();td();}
+function savePart(id){const p=parts.find(x=>x.id===id);if(!p)return;p.name=document.getElementById('pn-'+id)?.value||'';p.designation=document.getElementById('pd-'+id)?.value||'';p.editing=false;saveToPLib(p.name,p.designation);renderParts();td();}
+function editPart(id){const p=parts.find(x=>x.id===id);if(p){p.editing=true;renderParts();}}
+function delPart(id){parts=parts.filter(x=>x.id!==id);renderParts();td();}
+function renderParts(){
+  const cnt=parts.length;
+  document.getElementById('pc').textContent=cnt;
+  document.getElementById('psub').textContent=cnt+' recorded';
+  document.getElementById('stat-pt').textContent=cnt;
+  const l=document.getElementById('plist');
+  if(!cnt){l.innerHTML='<div class="empty"><div class="empty-icon">👥</div><p>No participants yet — click "Add participant" to begin.</p></div>';return;}
+  l.innerHTML=parts.map((p,i)=>{const[bg,col]=AV_COLORS[i%AV_COLORS.length];return p.editing?`
+    <div class="part-row"><div style="font-size:12px;color:#9B9BAA;text-align:center">${i+1}</div><div></div>
+    <div class="pdd-wrap"><input id="pn-${p.id}" type="text" value="${esc(p.name)}" placeholder="Type or pick from saved\u2026" style="padding:7px 10px;border:1.5px solid #E8E8F0;border-radius:8px;font-size:13px;outline:none;width:100%" oninput="showPDD(${p.id},this.value)" onfocus="showPDD(${p.id},this.value)" onblur="setTimeout(()=>hidePDD(${p.id}),180)" onkeydown="if(event.key===\\'Enter\\')savePart(${p.id})"/><div id="pdd-${p.id}" class="pdd"></div></div>
+    <input id="pd-${p.id}" type="text" value="${esc(p.designation)}" placeholder="Designation / role" style="padding:7px 10px;border:1.5px solid #E8E8F0;border-radius:8px;font-size:13px;outline:none;width:100%" list="desig-dl" onkeydown="if(event.key===\\'Enter\\')savePart(${p.id})"/>
+    <div style="display:flex;gap:4px"><button class="ibt" onclick="savePart(${p.id})" title="Save">\u2713</button><button class="ibt del" onclick="delPart(${p.id})" title="Delete">\u2715</button></div></div>`:`
+    <div class="part-row"><div style="font-size:12px;color:#9B9BAA;text-align:center">${i+1}</div>
+    <div class="avatar" style="background:${bg};color:${col}">${initials(p.name)}</div>
+    <div style="font-size:13px;font-weight:500;color:#2D2D3F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)||'<span style="color:#9B9BAA">—</span>'}</div>
+    <div style="font-size:13px;color:#6B6B80;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.designation)||'<span style="color:#9B9BAA">—</span>'}</div>
+    <div style="display:flex;gap:4px"><button class="ibt" onclick="editPart(${p.id})" title="Edit">✎</button><button class="ibt del" onclick="delPart(${p.id})" title="Delete">✕</button></div></div>`;}).join('');
+  const fe=parts.find(p=>p.editing);if(fe)setTimeout(()=>{document.getElementById('pn-'+fe.id)?.focus();},40);
+}
+function togAg(id){const a=agenda.find(x=>x.id===id);if(a){a.expanded=!a.expanded;renderAgenda();}}
+function setAS(id,s){const a=agenda.find(x=>x.id===id);if(a){a.status=s;renderAgenda();td();}}
+function updAg(id,f,v){const a=agenda.find(x=>x.id===id);if(a){a[f]=v;updCounts();td();}}
+function allExp(v){agenda.forEach(x=>x.expanded=v);renderAgenda();}
+function renderAgenda(){
+  document.getElementById('alist').innerHTML=agenda.map(a=>{
+    const hd=a.pointDiscussed.trim()||a.actionToBeTaken.trim();
+    return`<div class="agenda-item ${sCls(a.status)}${hd?' has-data':''}">
+      <button class="agenda-head" onclick="togAg(${a.id})">
+        <div class="agenda-num">${a.id}</div>
+        <div class="agenda-title-wrap">
+          <div class="agenda-title">${a.title}</div>
+          <div class="agenda-ref">IATF 16949 · ${a.ref}${hd?' · <span style="color:#0E7E49;font-weight:600">Data recorded</span>':''}</div>
+        </div>
+        <span class="badge ${bCls(a.status)}" style="margin-right:8px;flex-shrink:0">${a.status}</span>
+        <span style="color:#9B9BAA;font-size:18px">${a.expanded?'▲':'▼'}</span>
+      </button>
+      <div class="agenda-body ${a.expanded?'open':''}">
+        <div class="ag-grid">
+          <div class="full"><label style="font-size:11px;font-weight:700;color:#6B6B80;letter-spacing:0.4px;text-transform:uppercase;display:block;margin-bottom:5px">Point discussed</label>
+            <textarea rows="3" style="width:100%;padding:9px 12px;border:1.5px solid #E8E8F0;border-radius:8px;font-size:13px;font-family:Inter,sans-serif;outline:none" placeholder="Describe what was discussed for this agenda item…" oninput="updAg(${a.id},'pointDiscussed',this.value)">${esc(a.pointDiscussed)}</textarea></div>
+          <div class="full"><label style="font-size:11px;font-weight:700;color:#6B6B80;letter-spacing:0.4px;text-transform:uppercase;display:block;margin-bottom:5px">Action to be taken</label>
+            <textarea rows="2" style="width:100%;padding:9px 12px;border:1.5px solid #E8E8F0;border-radius:8px;font-size:13px;font-family:Inter,sans-serif;outline:none" placeholder="Required actions and decisions…" oninput="updAg(${a.id},'actionToBeTaken',this.value)">${esc(a.actionToBeTaken)}</textarea></div>
+          <div><label style="font-size:11px;font-weight:700;color:#6B6B80;letter-spacing:0.4px;text-transform:uppercase;display:block;margin-bottom:5px">Responsibility</label>
+            <input type="text" value="${esc(a.responsibility)}" placeholder="Person / team" style="width:100%;padding:9px 12px;border:1.5px solid #E8E8F0;border-radius:8px;font-size:13px;outline:none" oninput="updAg(${a.id},'responsibility',this.value)"/></div>
+          <div><label style="font-size:11px;font-weight:700;color:#6B6B80;letter-spacing:0.4px;text-transform:uppercase;display:block;margin-bottom:5px">Target date</label>
+            <input type="date" value="${a.targetDate}" style="width:100%;padding:9px 12px;border:1.5px solid #E8E8F0;border-radius:8px;font-size:13px;outline:none" onchange="updAg(${a.id},'targetDate',this.value)"/></div>
+        </div>
+        <div><label style="font-size:11px;font-weight:700;color:#6B6B80;letter-spacing:0.4px;text-transform:uppercase;display:block;margin-bottom:8px">Status</label>
+          <div class="status-btns">
+            <button class="sbtn open${a.status==='Open'?' sel':''}" onclick="setAS(${a.id},'Open')">Open</button>
+            <button class="sbtn inprogress${a.status==='In Progress'?' sel':''}" onclick="setAS(${a.id},'In Progress')">In Progress</button>
+            <button class="sbtn completed${a.status==='Completed'?' sel':''}" onclick="setAS(${a.id},'Completed')">Completed</button>
+            <button class="sbtn na${a.status==='N/A'?' sel':''}" onclick="setAS(${a.id},'N/A')">N/A</button>
+          </div>
+        </div>
+      </div>
+    </div>`;}).join('');
+  updCounts();
+}
+function updCounts(){
+  const c=agenda.filter(x=>x.status==='Completed').length,i=agenda.filter(x=>x.status==='In Progress').length,o=agenda.filter(x=>x.status==='Open').length,n=agenda.filter(x=>x.status==='N/A').length;
+  const disc=agenda.filter(x=>x.pointDiscussed.trim()).length;
+  document.getElementById('cnt-c').textContent=c;document.getElementById('cnt-i').textContent=i;document.getElementById('cnt-o').textContent=o;document.getElementById('cnt-n').textContent=n;
+  const pct=Math.round((c+n)/17*100);
+  document.getElementById('plbl').textContent=c+' of 17 agenda items completed';document.getElementById('ppct').textContent=pct+'%';document.getElementById('pfill').style.width=pct+'%';
+  document.getElementById('ac').textContent=disc+'/17';document.getElementById('stat-ag').textContent=disc+'/17';
+}
+function renderDoc(){
+  const inf=getInfo(),ps=getSavedParts();
+  const half=Math.ceil(ps.length/2),left=ps.slice(0,half),right=ps.slice(half);
+  const prows=half>0?Array.from({length:half},(_,i)=>`<tr><td style="text-align:center;font-weight:600;width:28px">${i+1}</td><td><strong>${esc(left[i]?.name||'')}</strong></td><td style="color:#6B6B80">${esc(left[i]?.designation||'')}</td><td style="width:60px"></td><td style="text-align:center;font-weight:600;width:28px">${right[i]?half+i+1:''}</td><td><strong>${esc(right[i]?.name||'')}</strong></td><td style="color:#6B6B80">${esc(right[i]?.designation||'')}</td><td style="width:60px"></td></tr>`).join(''):`<tr><td colspan="8" style="text-align:center;color:#9B9BAA;padding:16px">No participants recorded</td></tr>`;
+  const agrows=agenda.map(a=>{const sc=a.status==='Completed'?'background:#D1FAE5;color:#065F46':a.status==='In Progress'?'background:#FEF3C7;color:#92400E':a.status==='N/A'?'background:#F4F4F8;color:#6B6B80':'background:#FFEBEB;color:#DA1E28';return`<tr><td style="text-align:center;font-weight:700;width:28px">${a.id}</td><td><strong style="font-size:11px">${esc(a.title)}</strong><br/><span style="font-size:10px;color:#9B9BAA">${a.ref}</span></td><td>${esc(a.pointDiscussed)||'<span style="color:#9B9BAA">—</span>'}</td><td>${esc(a.actionToBeTaken)||'<span style="color:#9B9BAA">—</span>'}</td><td style="font-size:11px">${esc(a.responsibility)||'—'}</td><td style="font-size:11px;white-space:nowrap">${a.targetDate?fmtDate(a.targetDate):'—'}</td><td><span style="padding:3px 7px;border-radius:4px;font-size:10px;font-weight:700;${sc}">${a.status}</span></td></tr>`;}).join('');
+  const cc=inf.conclusion==='Satisfactory'?'#065F46':inf.conclusion==='Needs improvement'?'#92400E':'#DA1E28';
+  const cBg=inf.conclusion==='Satisfactory'?'#D1FAE5':inf.conclusion==='Needs improvement'?'#FEF3C7':'#FFEBEB';
+  document.getElementById('doc-content').innerHTML=`
+  <div class="doc-wrap">
+    <div class="doc-header-band">
+      <div class="doc-header-left">
+        <div class="doc-header-logo"><img src="${logoBlobUrl}" alt="Kaizen Engineers" style="height:38px"/></div>
+        <div><div class="doc-org-name">${esc(inf.companyName)||'Organization Name'}</div><div class="doc-org-std">IATF 16949:2016 · Clause 9.3 · Quality Management System</div></div>
+      </div>
+      <div class="doc-meta-box">
+        <div>Doc No<strong>${esc(inf.documentNo)}</strong></div>
+        <div style="margin-top:6px">MRM No<strong>${esc(inf.mrmNo)||'—'}</strong></div>
+        <div style="margin-top:6px">Type: <span style="color:white">${esc(inf.meetingType)}</span></div>
+      </div>
+    </div>
+    <div class="doc-title-band">
+      <h2>Minutes of Management Review Meeting</h2>
+      <p>IATF 16949:2016 — Clause 9.3 — Overall conclusion: <strong style="color:${cc};background:${cBg};padding:2px 10px;border-radius:4px">${esc(inf.conclusion)}</strong></p>
+    </div>
+    <div class="doc-content">
+      <div class="doc-section-title">📅 Meeting details</div>
+      <table class="doc-table" style="margin-bottom:0"><tbody>
+        <tr><td class="lbl">Date</td><td><strong>${fmtDate(inf.date)}</strong></td><td class="lbl">Time</td><td>${esc(inf.time)||'—'}</td><td class="lbl">Next MRM</td><td>${fmtDate(inf.nextMrmDate)}</td></tr>
+        <tr><td class="lbl">Venue</td><td colspan="3">${esc(inf.venue)||'—'}</td><td class="lbl">Standard</td><td>${esc(inf.standardRef)}</td></tr>
+        <tr><td class="lbl">Chairperson</td><td colspan="5">${esc(inf.chairperson)||'—'}</td></tr>
+      </tbody></table>
+      <div class="doc-section-title">👥 Attendees / participants</div>
+      <table class="doc-table" style="margin-bottom:0"><thead><tr><th style="width:28px">Sr.</th><th>Name</th><th>Designation</th><th style="width:60px">Sign</th><th style="width:28px">Sr.</th><th>Name</th><th>Designation</th><th style="width:60px">Sign</th></tr></thead><tbody>${prows}</tbody></table>
+      <div class="doc-section-title">📋 Agenda items — IATF 16949:2016 clause 9.3.2</div>
+      <table class="doc-table" style="margin-bottom:0"><thead><tr><th style="width:28px">#</th><th style="width:20%">Agenda item</th><th style="width:24%">Point discussed</th><th style="width:21%">Action to be taken</th><th style="width:12%">Responsibility</th><th style="width:9%">Target date</th><th style="width:8%">Status</th></tr></thead><tbody>${agrows}</tbody></table>
+      ${inf.reviewOutput?`<div class="doc-section-title">✅ Management review output — clause 9.3.3</div><div style="border:1px solid #E8E8F0;border-top:none;padding:12px 14px;font-size:12px;line-height:1.8;white-space:pre-wrap;background:white">${esc(inf.reviewOutput)}</div>`:''}
+      <div class="doc-section-title">✍️ Signatures</div>
+      <div class="sig-row">
+        <div class="sig-cell"><div style="font-size:12px;font-weight:700;color:#2D2D3F">Prepared by</div><div style="font-size:11px;color:#6B6B80;margin-top:3px">QMS Representative</div><div class="sig-line"></div><div style="font-size:10px;color:#9B9BAA">Signature &amp; date</div></div>
+        <div class="sig-cell"><div style="font-size:12px;font-weight:700;color:#2D2D3F">Reviewed by</div><div style="font-size:11px;color:#6B6B80;margin-top:3px">Management Representative / QSMR</div><div class="sig-line"></div><div style="font-size:10px;color:#9B9BAA">Signature &amp; date</div></div>
+        <div class="sig-cell"><div style="font-size:12px;font-weight:700;color:#2D2D3F">Approved by</div><div style="font-size:11px;color:#6B6B80;margin-top:3px">Top Management</div><div class="sig-line"></div><div style="font-size:10px;color:#9B9BAA">Signature &amp; date</div></div>
+      </div>
+    </div>
+    <div class="doc-footer">
+      <span>CC to: ${esc(inf.ccTo)||'All departments'}${inf.additionalRemarks?' · '+esc(inf.additionalRemarks):''}</span>
+      <span>Form No: ${esc(inf.documentNo)} · IATF 16949:2016 · Generated: ${fmtDate(new Date().toISOString().slice(0,10))}</span>
+    </div>
+  </div>`;
+}
+async function quickSave(){
+  const inf=getInfo(),name=[inf.mrmNo,inf.companyName,inf.date?fmtDate(inf.date):''].filter(Boolean).join(' — ')||'Unnamed MRM';
+  try{
+    const data=collectData(),id='rec-'+Date.now();
+    let recs=[];try{recs=JSON.parse(localStorage.getItem('mrm-records')||'[]');}catch(e){}
+    recs.unshift({id,name,mrmNo:inf.mrmNo,date:inf.date,companyName:inf.companyName,savedAt:new Date().toISOString()});
+    localStorage.setItem('mrm-records',JSON.stringify(recs.slice(0,25)));
+    localStorage.setItem('mrm-data-'+id,JSON.stringify(data));
+    showMsg('✓ Saved: '+name,'s');saveToCoList(inf.companyName);updSind('Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+    renderRecords();
+  }catch(e){showMsg('✕ Save failed: '+e.message,'e');}
+}
+function loadRecord(id){try{const r=localStorage.getItem('mrm-data-'+id);if(r){applyData(JSON.parse(r));showMsg('✓ Record loaded','s');go('meeting');}}catch(e){showMsg('✕ Load failed','e');}}
+function deleteRecord(id){
+  try{let recs=JSON.parse(localStorage.getItem('mrm-records')||'[]');localStorage.setItem('mrm-records',JSON.stringify(recs.filter(x=>x.id!==id)));localStorage.removeItem('mrm-data-'+id);showMsg('Record deleted','i');renderRecords();}catch(e){showMsg('✕ Delete failed','e');}
+}
+function renderRecords(){
+  const cont=document.getElementById('rec-list');
+  let recs=[];try{recs=JSON.parse(localStorage.getItem('mrm-records')||'[]');}catch(e){}
+  document.getElementById('rc').textContent=recs.length;
+  document.getElementById('rcount').textContent=recs.length+' record'+(recs.length===1?'':'s');
+  if(!recs.length){cont.innerHTML='<div class="empty" style="background:white;border:1px solid #E8E8F0;border-radius:12px;padding:40px"><div class="empty-icon">🗄️</div><p>No saved records yet. Click "Save Record" to save the current MRM.</p></div>';return;}
+  cont.innerHTML=recs.map((r,i)=>{const[bg,col]=AV_COLORS[i%AV_COLORS.length];return`<div class="rec-card">
+    <div class="rec-icon" style="background:${bg};color:${col}">${r.mrmNo?r.mrmNo.replace(/[^0-9]/g,'').slice(-2)||'MR':'MR'}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:600;color:#2D2D3F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">${esc(r.name)}</div>
+      <div style="font-size:11px;color:#9B9BAA">🕐 Saved ${fmtDT(r.savedAt)}</div>
+    </div>
+    <button class="act-btn" onclick="loadRecord('${r.id}')">📂 Load</button>
+    <button class="act-btn" style="color:#DA1E28;border-color:#FFB3B3" onclick="deleteRecord('${r.id}')">✕</button>
+  </div>`;}).join('');
+}
+function newMRM(){
+  ['m-co','m-no','m-vn','m-ch','m-ro','m-ar'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['m-dt','m-tm','m-nx'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('m-dn').value='QMS/F/10/00';document.getElementById('m-cc').value='All departments';
+  document.querySelector('input[name="mtype"][value="Regular"]').checked=true;updSeg('mt','mtype',['Regular','Additional','Special']);
+  document.querySelector('input[name="conc"][value="Satisfactory"]').checked=true;updSeg('cn','conc',['Satisfactory','Needs improvement','Unsatisfactory']);
+  parts=[];nid=1;renderParts();
+  agenda.forEach(a=>Object.assign(a,{pointDiscussed:'',actionToBeTaken:'',responsibility:'',targetDate:'',status:'Open',expanded:false}));
+  renderAgenda();showMsg('ℹ New MRM started','i');updSind('New — unsaved');updStats();go('meeting');
+}
+function doJSON(){
+  const inf=getInfo(),d={meetingInfo:inf,participants:getSavedParts().map(({id,editing,...r})=>r),agendaItems:agenda.map(({expanded,...r})=>r),exportedAt:new Date().toISOString(),standard:'IATF 16949:2016'};
+  const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='MRM_'+(inf.mrmNo||'record')+'_'+(inf.date||'draft')+'.json';a.click();URL.revokeObjectURL(u);
+}
+function doExcel(){
+  if(!window.XLSX){showMsg('Excel library loading, try again','e');return;}
+  const inf=getInfo(),ps=getSavedParts(),wb=XLSX.utils.book_new();
+  const ws1=XLSX.utils.aoa_to_sheet([['MINUTES OF MANAGEMENT REVIEW MEETING'],['Kaizen Engineers · IATF 16949:2016, Clause 9.3'],[],['Field','Value'],['Organization',inf.companyName],['MRM Number',inf.mrmNo],['Date',inf.date],['Time',inf.time],['Venue',inf.venue],['Chairperson',inf.chairperson],['Meeting Type',inf.meetingType],['Conclusion',inf.conclusion],['Document No',inf.documentNo],['Next MRM Date',inf.nextMrmDate],['Review Output',inf.reviewOutput],['CC To',inf.ccTo],['Additional Remarks',inf.additionalRemarks],['Generated',new Date().toLocaleString()]]);
+  ws1['!cols']=[{wch:28},{wch:55}];XLSX.utils.book_append_sheet(wb,ws1,'Meeting Info');
+  const ws2=XLSX.utils.aoa_to_sheet([['ATTENDEES / PARTICIPANTS'],[],['Sr.','Name','Designation','Signature'],...ps.map((p,i)=>[i+1,p.name,p.designation,''])]);
+  ws2['!cols']=[{wch:5},{wch:34},{wch:34},{wch:18}];XLSX.utils.book_append_sheet(wb,ws2,'Participants');
+  const ws3=XLSX.utils.aoa_to_sheet([['AGENDA ITEMS — IATF 16949:2016 Clause 9.3.2'],[],['#','Clause Ref','Agenda Item','Point Discussed','Action To Be Taken','Responsibility','Target Date','Status'],...agenda.map(a=>[a.id,a.ref,a.title,a.pointDiscussed,a.actionToBeTaken,a.responsibility,a.targetDate,a.status])]);
+  ws3['!cols']=[{wch:4},{wch:13},{wch:45},{wch:38},{wch:38},{wch:22},{wch:13},{wch:13}];XLSX.utils.book_append_sheet(wb,ws3,'Agenda Items');
+  XLSX.writeFile(wb,'MRM_'+(inf.mrmNo||'Record')+'_'+(inf.date||'draft')+'.xlsx');
+}
+function doPDF(){
+  const inf=getInfo(),ps=getSavedParts();
+  const half=Math.ceil(ps.length/2),left=ps.slice(0,half),right=ps.slice(half);
+  const prows=half>0?Array.from({length:half},(_,i)=>`<tr><td>${i+1}</td><td><b>${esc(left[i]?.name||'')}</b></td><td>${esc(left[i]?.designation||'')}</td><td></td><td>${right[i]?half+i+1:''}</td><td><b>${esc(right[i]?.name||'')}</b></td><td>${esc(right[i]?.designation||'')}</td><td></td></tr>`).join(''):'<tr><td colspan="8" style="text-align:center;color:#999">No participants</td></tr>';
+  const arows=agenda.map(a=>{const sc=a.status==='Completed'?'#D1FAE5;color:#065F46':a.status==='In Progress'?'#FEF3C7;color:#92400E':a.status==='N/A'?'#F4F4F8;color:#6B6B80':'#FFEBEB;color:#DA1E28';return`<tr><td style="text-align:center;font-weight:bold">${a.id}</td><td><b style="font-size:8px">${esc(a.title)}</b><br/><span style="font-size:7px;color:#9B9BAA">${a.ref}</span></td><td>${esc(a.pointDiscussed)||'—'}</td><td>${esc(a.actionToBeTaken)||'—'}</td><td>${esc(a.responsibility)||'—'}</td><td style="white-space:nowrap">${a.targetDate?fmtDate(a.targetDate):'—'}</td><td><span style="background:${sc};padding:2px 5px;border-radius:3px;font-size:7px;font-weight:bold">${a.status}</span></td></tr>`;}).join('');
+  const cc=inf.conclusion==='Satisfactory'?'#065F46':inf.conclusion==='Needs improvement'?'#92400E':'#DA1E28';
+  // Convert base64 logo to blob URL so it renders in print windows
+  let logoBlobUrl=LOGO_SRC;
+  try{
+    const b64=LOGO_SRC.split(',')[1];
+    const byteStr=atob(b64);
+    const ab=new ArrayBuffer(byteStr.length);
+    const ia=new Uint8Array(ab);
+    for(let i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
+    const blob=new Blob([ab],{type:'image/jpeg'});
+    logoBlobUrl=URL.createObjectURL(blob);
+  }catch(e){}
+  const w=window.open('','_blank','width=980,height=720');if(!w)return;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>MRM — ${esc(inf.mrmNo)}</title>
+<style>body{font-family:Arial,sans-serif;font-size:9px;margin:12mm;color:#000}h1{font-size:14px;text-align:center;margin:5px 0 2px;font-weight:bold}.mhdr{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#1A1A2E,#2D2D3F);color:white;padding:14px 18px;border-bottom:4px solid #DA1E28;border-radius:4px 4px 0 0;margin-bottom:0}.logo-card{background:white;border-radius:8px;padding:8px 11px;flex-shrink:0;display:flex;align-items:center}.mhdr-mid{flex:1;min-width:0}.co{font-size:15px;font-weight:bold;font-family:Arial,sans-serif;letter-spacing:-.2px}.sub{font-size:8px;color:rgba(255,255,255,.5);margin-top:2px;letter-spacing:.6px}.meta{text-align:right;font-size:8px;color:rgba(255,255,255,.55);flex-shrink:0}.meta strong{color:white;font-size:11px;display:block;margin-top:1px}.tband{text-align:center;background:#F4F4F8;padding:10px;border:1px solid #E8E8F0;margin-bottom:10px}.sub2{text-align:center;font-size:8px;color:#555;margin:0 0 10px}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#1A1A2E;color:white;padding:5px 7px;font-size:8px;text-align:left}td{border:.5px solid #ccc;padding:3px 6px;vertical-align:top;font-size:8px}.lb{font-weight:bold;background:#F4F4F8;color:#4A4A5C;white-space:nowrap;width:1px}tr:nth-child(even) td:not(.lb){background:#FAFAFC}h2{font-size:9px;background:#2D2D3F;color:white;padding:5px 9px;margin:10px 0 0;border-radius:3px 3px 0 0}.sigs{display:flex;justify-content:space-between;margin-top:16px;gap:12px}.sig{text-align:center;flex:1;border:1px solid #ccc;padding:10px;border-radius:4px}.sigline{border-top:1.5px solid #000;margin:24px 10px 5px}.ft{display:flex;justify-content:space-between;margin-top:10px;font-size:7px;color:#9B9BAA;border-top:.5px solid #E8E8F0;padding-top:6px}.logo-card{page-break-inside:avoid}.logo-card img{max-height:36px!important;width:auto!important}@media print{body{margin:8mm}@page{size:A4;margin:8mm}.logo-card img{max-height:36px!important;height:36px!important;width:auto!important}}</style></head><body>
+<div class="mhdr"><div class="logo-card"><img src="${logoBlobUrl}" alt="Logo" style="height:38px;width:auto;display:block"/></div><div class="mhdr-mid"><div class="co">${esc(inf.companyName)||'Organization'}</div><div class="sub">IATF 16949:2016 — Clause 9.3 | ${esc(inf.standardRef)}</div></div><div class="meta"><div>Doc No<strong>${esc(inf.documentNo)}</strong></div><div>MRM No<strong>${esc(inf.mrmNo)||'—'}</strong></div><div>Type: <span style="color:rgba(255,255,255,.85)">${esc(inf.meetingType)}</span></div></div></div>
+<div class="tband"><h1>Minutes of Management Review Meeting</h1></div>
+<p class="sub2">IATF 16949:2016 – Clause 9.3 · Conclusion: <strong style="color:${cc}">${esc(inf.conclusion)}</strong></p>
+<table><tbody><tr><td class="lb">Date</td><td><b>${fmtDate(inf.date)}</b></td><td class="lb">Time</td><td>${esc(inf.time)||'—'}</td><td class="lb">Next MRM</td><td>${fmtDate(inf.nextMrmDate)}</td></tr><tr><td class="lb">Venue</td><td colspan="5">${esc(inf.venue)||'—'}</td></tr><tr><td class="lb">Chairperson</td><td colspan="5">${esc(inf.chairperson)||'—'}</td></tr></tbody></table>
+<h2>Attendees / Participants</h2><table><thead><tr><th width="4%">Sr.</th><th width="25%">Name</th><th width="21%">Designation</th><th width="8%">Sign</th><th width="4%">Sr.</th><th width="25%">Name</th><th width="21%">Designation</th><th width="8%">Sign</th></tr></thead><tbody>${prows}</tbody></table>
+<h2>Agenda Items — IATF 16949:2016 Clause 9.3.2</h2><table><thead><tr><th width="3%">#</th><th width="17%">Agenda item</th><th width="23%">Point discussed</th><th width="21%">Action to be taken</th><th width="11%">Responsibility</th><th width="9%">Target date</th><th width="7%">Status</th></tr></thead><tbody>${arows}</tbody></table>
+${inf.reviewOutput?`<h2>Management Review Output — Clause 9.3.3</h2><div style="border:.5px solid #ccc;border-top:none;padding:8px;margin-bottom:10px;white-space:pre-wrap;font-size:8px">${esc(inf.reviewOutput)}</div>`:''}
+<div class="sigs"><div class="sig"><b>Prepared by</b><br><span style="font-size:8px;color:#6B6B80">QMS Representative</span><div class="sigline"></div><span style="font-size:7px;color:#9B9BAA">Signature & date</span></div><div class="sig"><b>Reviewed by</b><br><span style="font-size:8px;color:#6B6B80">Management Representative</span><div class="sigline"></div><span style="font-size:7px;color:#9B9BAA">Signature & date</span></div><div class="sig"><b>Approved by</b><br><span style="font-size:8px;color:#6B6B80">Top Management</span><div class="sigline"></div><span style="font-size:7px;color:#9B9BAA">Signature & date</span></div></div>
+<div class="ft"><span>CC to: ${esc(inf.ccTo)||'All departments'}</span><span>Form No: ${esc(inf.documentNo)} · IATF 16949:2016 · Generated: ${new Date().toLocaleString()}</span></div>
+</body></html>`);
+  w.document.close();
+  // Print after logo image fully loads (or after 2s fallback)
+  const img=w.document.querySelector('img');
+  if(img){
+    let printed=false;
+    const doPrint=()=>{if(!printed){printed=true;w.print();}};
+    img.onload=()=>setTimeout(doPrint,200);
+    img.onerror=()=>setTimeout(doPrint,200);
+    setTimeout(doPrint,2000);
+  }else{setTimeout(()=>w.print(),400);}
+}
+renderParts();renderAgenda();loadDraft();renderRecords();updStats();setLogos();loadCoDL();loadDesigDL();
+</script>
+</body></html>
